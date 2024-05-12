@@ -9,6 +9,7 @@ const { exec } = require('child_process');
 const { default: getAudioDurationInSeconds } = require('get-audio-duration');
 
 const VideoModel = require('../db/models/video');
+const JobModel = require('../db/models/job');
 
 const STATUSES = {
   PROGRESS: 0,
@@ -241,16 +242,55 @@ const processVideo = async (videoId, jobModel = null) => {
     }
 
     // await mergeVideos(videos, video?._id);
-    // jobModel.updateOne(
-    //   { _id: jobModel?._id },
-    //   { $set: { updatedAt: Date.now, status: STATUSES.COMPLETED } }
-    // );
+
+    await VideoModel.updateOne(
+      {
+        _id: video._id,
+      },
+      {
+        $set: {
+          status: STATUSES.COMPLETED,
+          updatedAt: Date.now(),
+        },
+      }
+    );
+
+    await JobModel.updateOne(
+      {
+        videoId: jobModel.videoId,
+      },
+      {
+        $set: {
+          status: STATUSES.COMPLETED,
+          updatedAt: Date.now(),
+        },
+      }
+    );
   } catch (err) {
     console.log({ error: `Error processing Video #${videoId}: ${err}` });
-    // jobModel.updateOne(
-    //   { _id: jobModel?._id },
-    //   { $set: { updatedAt: Date.now, status: STATUSES.FAILED } }
-    // );
+    await VideoModel.updateOne(
+      {
+        _id: video._id,
+      },
+      {
+        $set: {
+          status: STATUSES.FAILED,
+          updatedAt: Date.now(),
+        },
+      }
+    );
+
+    await JobModel.updateOne(
+      {
+        videoId: jobModel.videoId,
+      },
+      {
+        $set: {
+          status: STATUSES.FAILED,
+          updatedAt: Date.now(),
+        },
+      }
+    );
   }
 };
 

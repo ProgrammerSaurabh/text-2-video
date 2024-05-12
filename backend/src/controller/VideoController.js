@@ -68,6 +68,29 @@ exports.store = async (req, res) => {
           );
         } catch (error) {
           console.log({ error });
+          await VideoModel.updateOne(
+            {
+              _id: video._id,
+            },
+            {
+              $set: {
+                status: STATUSES.FAILED,
+                updatedAt: Date.now(),
+              },
+            }
+          );
+
+          await JobModel.updateOne(
+            {
+              videoId: jobModel.videoId,
+            },
+            {
+              $set: {
+                status: STATUSES.FAILED,
+                updatedAt: Date.now(),
+              },
+            }
+          );
           // res.status(500).json({ error: 'Failed to generate content' });
         }
       });
@@ -80,6 +103,30 @@ exports.store = async (req, res) => {
         message: 'Data saved successfully',
       });
     } catch {
+      await VideoModel.updateOne(
+        {
+          _id: video._id,
+        },
+        {
+          $set: {
+            status: STATUSES.FAILED,
+            updatedAt: Date.now(),
+          },
+        }
+      );
+
+      await JobModel.updateOne(
+        {
+          videoId: jobModel.videoId,
+        },
+        {
+          $set: {
+            status: STATUSES.FAILED,
+            updatedAt: Date.now(),
+          },
+        }
+      );
+
       res.status(500).json({
         success: false,
         message: `Something went wrong`,
