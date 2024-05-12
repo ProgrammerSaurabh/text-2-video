@@ -23,6 +23,7 @@ import { FaTrashCan } from 'react-icons/fa6';
 
 import { FaPlus } from 'react-icons/fa';
 import Color from '../../components/Forms/Color';
+import ErrorMessage from '../../components/Forms/Color/ErrorMessage';
 
 const TEXT_TEMPLATE = {
   content: '',
@@ -46,99 +47,142 @@ const FRAME_TEMPLATE = {
   includeImage: false,
   texts: [TEXT_TEMPLATE],
   images: [IMAGE_TEMPLATE],
-  backgroundType: BACKGROUND_TYPES[0],
-  background: '#000000',
-  audioUrl: '',
+  backgroundType: undefined,
+  background: undefined,
+  audioUrl: undefined,
 };
 
 const frameSchema = yup.object().shape({
-  includeImage: yup.bool().optional(),
-  texts: yup.array().of(
-    yup.object().shape({
-      content: yup.string().required('Content is required'),
-      x: yup
-        .number()
-        .positive('Value should be positive')
-        .required('X-axis position is required'),
-      y: yup
-        .number()
-        .positive('Value should be positive')
-        .required('Y-axis position is required'),
-      size: yup
-        .number()
-        .positive('Value should be positive')
-        .required('Size is required'),
-      color: yup
-        .string()
-        .test('hex-code-validator', 'Invalid hex code', (value) =>
-          /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
-        ),
-    })
-  ),
-  images: yup.array().of(
-    yup.object().shape({
-      url: yup.string().when('includeImage', {
-        is: true,
-        then: yup.string().required('Url is required'),
-      }),
-      // .test('img-url-validator', 'Invalid url', (value) =>
-      //   /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z]{2,}(\.[a-zA-Z]{2,})(\.[a-zA-Z]{2,})?\/[a-zA-Z0-9]{2,}|((https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z]{2,}(\.[a-zA-Z]{2,})(\.[a-zA-Z]{2,})?)|(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})?/g.test(
-      //     value
-      //   )
-      // )
-      x: yup
-        .number()
-        .positive('Value should be positive')
-        .when('includeImage', {
-          is: true,
-          then: yup.string().required('Url is required'),
-        })
-        .required('X-axis position is required'),
-      y: yup
-        .number()
-        .positive('Value should be positive')
-        .when('includeImage', {
-          is: true,
-          then: yup.string().required('Y-axis position is required'),
-        }),
-      width: yup
-        .number()
-        .positive('Value should be positive')
-        .when('includeImage', {
-          is: true,
-          then: yup.string().required('Width is required'),
-        }),
-      height: yup
-        .number()
-        .positive('Value should be positive')
-        .when('includeImage', {
-          is: true,
-          then: yup.string().required('Height is required'),
-        }),
-    })
-  ),
-  backgroundType: yup.string(),
-  // .required('Background type is required')
-  // .oneOf(BACKGROUND_TYPES, 'Invalid value'),
-  background: yup.string(),
-  // .required('Value is required')
-  // .when('backgroundType', {
-  //   is: BACKGROUND_TYPES[0],
-  //   then: yup
-  //     .string()
-  //     .test('hex-code-validator', 'Invalid hex code', (value) =>
-  //       /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
-  //     ),
-  // })
-  // .when('backgroundType', {
-  //   is: BACKGROUND_TYPES[1],
-  //   then: yup
-  //     .string()
-  //     .test('url-validation', 'Invalid hex code', (value) =>
-  //       /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
-  //     ),
-  // }),
-  audioUrl: yup.string().optional(),
+  frames: yup
+    .array()
+    .of(
+      yup.object().shape({
+        includeImage: yup.bool().optional(),
+        texts: yup
+          .array()
+          .of(
+            yup.object().shape({
+              content: yup.string().required('Content is required'),
+              x: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .required('X-axis position is required'),
+              y: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .required('Y-axis position is required'),
+              size: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .required('Size is required'),
+              color: yup
+                .string()
+                .required('Color is required')
+                .test('hex-code-validator', 'Invalid hex code', (value) =>
+                  /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
+                ),
+            })
+          )
+          .required(),
+        images: yup
+          .array()
+          .of(
+            yup.object().shape({
+              url: yup.string().when('includeImage', {
+                is: true,
+                then: yup.string().required('Url is required'),
+              }),
+              // .test('img-url-validator', 'Invalid url', (value) =>
+              //   /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z]{2,}(\.[a-zA-Z]{2,})(\.[a-zA-Z]{2,})?\/[a-zA-Z0-9]{2,}|((https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z]{2,}(\.[a-zA-Z]{2,})(\.[a-zA-Z]{2,})?)|(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})?/g.test(
+              //     value
+              //   )
+              // )
+              x: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .when('includeImage', {
+                  is: true,
+                  then: yup.number().required('X-axis position is required'),
+                }),
+              y: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .when('includeImage', {
+                  is: true,
+                  then: yup.number().required('Y-axis position is required'),
+                }),
+              width: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .when('includeImage', {
+                  is: true,
+                  then: yup.number().required('Width is required'),
+                }),
+              height: yup
+                .number()
+                .test(
+                  'positive-test',
+                  'Value should be positive',
+                  (value) => value >= 0
+                )
+                .when('includeImage', {
+                  is: true,
+                  then: yup.number().required('Height is required'),
+                }),
+            })
+          )
+          .required(),
+        backgroundType: yup
+          .string()
+          .required('Background type is required')
+          .oneOf(BACKGROUND_TYPES, 'Invalid value'),
+        background: yup
+          .string()
+          .required('Value is required')
+          .when('backgroundType', {
+            is: BACKGROUND_TYPES[0],
+            then: yup
+              .string()
+              .test('hex-code-validator', 'Invalid hex code', (value) =>
+                /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
+              ),
+          })
+          .when('backgroundType', {
+            is: BACKGROUND_TYPES[1],
+            then: yup
+              .string()
+              .test('url-validation', 'Invalid hex code', (value) =>
+                /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
+              ),
+          }),
+        audioUrl: yup.string().optional(),
+      })
+    )
+    .required(),
 });
 
 const Create = () => {
@@ -194,19 +238,7 @@ const Create = () => {
     }
   };
 
-  const handleChange = (changeFor, key, value, index, forIndex) => {
-    formik.setFieldValue(
-      `frames.${index}.${changeFor}.${forIndex}.${key}`,
-      value
-    );
-  };
-
-  const handleDirectChange = (key, value, index) => {
-    formik.setFieldValue(`frames.${index}.${key}`, value);
-  };
-
-  console.log({ errors: formik.errors });
-  console.log({ values: formik.values });
+  window.aa = formik;
 
   return (
     <div className=' container mx-auto h-full py-10 px-4'>
@@ -267,7 +299,7 @@ const Create = () => {
                   {frame.texts.map((text, textIndex) => (
                     <Fieldset
                       className='space-y-4 mt-2 border-t-2 border-b-2 border-gray-300 py-4'
-                      key={`frame-${index}-text-${textIndex}`}
+                      key={`frames-${index}-text-${textIndex}`}
                     >
                       <Legend className='text-lg font-bold flex justify-between items-center'>
                         <span className='block'>{`Text ${textIndex + 1}`}</span>
@@ -301,22 +333,36 @@ const Create = () => {
                       <Field>
                         <Label
                           className='block'
-                          htmlFor={`frame-${index}-text-content-${textIndex}`}
+                          htmlFor={`frames.${index}.texts.${textIndex}.content`}
                         >
                           Content
                         </Label>
                         <Input
-                          className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                          id={`frame-${index}-text-content-${textIndex}`}
+                          className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                            formik.touched?.frames?.[index]?.texts?.[textIndex]
+                              ?.content &&
+                            formik.errors?.frames?.[index]?.texts?.[textIndex]
+                              ?.content
+                              ? 'border-rose-500'
+                              : ''
+                          }`}
+                          id={`frames.${index}.texts.${textIndex}.content`}
+                          name={`frames.${index}.texts.${textIndex}.content`}
                           value={text.content}
-                          onChange={(e) =>
-                            handleChange(
-                              'texts',
-                              'content',
-                              e.target.value,
-                              index,
-                              textIndex
-                            )
+                          onBlur={formik.handleBlur}
+                          onChange={formik.handleChange}
+                        />
+
+                        <ErrorMessage
+                          show={
+                            formik.touched?.frames?.[index]?.texts?.[textIndex]
+                              ?.content &&
+                            formik.errors?.frames?.[index]?.texts?.[textIndex]
+                              ?.content
+                          }
+                          message={
+                            formik.errors?.frames?.[index]?.texts?.[textIndex]
+                              ?.content
                           }
                         />
                       </Field>
@@ -324,22 +370,38 @@ const Create = () => {
                         <Field>
                           <Label
                             className='block'
-                            htmlFor={`frame-${index}-text-x-${textIndex}`}
+                            htmlFor={`frames.${index}.texts.${textIndex}.x`}
                           >
                             X-axis position
                           </Label>
                           <Input
-                            className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                            id={`frame-${index}-text-x-${textIndex}`}
-                            defaultValue={text.x}
-                            onChange={(e) =>
-                              handleChange(
-                                'texts',
-                                'x',
-                                e.target.value,
-                                index,
+                            name={`frames.${index}.texts.${textIndex}.x`}
+                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                              formik.touched?.frames?.[index]?.texts?.[
                                 textIndex
-                              )
+                              ]?.x &&
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.x
+                                ? 'border-rose-500'
+                                : ''
+                            }`}
+                            id={`frames.${index}.texts.${textIndex}.x`}
+                            defaultValue={text.x}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+
+                          <ErrorMessage
+                            show={
+                              formik.touched?.frames?.[index]?.texts?.[
+                                textIndex
+                              ]?.x &&
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.x
+                            }
+                            message={
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.x
                             }
                           />
                         </Field>
@@ -347,22 +409,38 @@ const Create = () => {
                         <Field>
                           <Label
                             className='block'
-                            htmlFor={`frame-${index}-text-y-${textIndex}`}
+                            htmlFor={`frames.${index}.texts.${textIndex}.y`}
                           >
                             Y-axis position
                           </Label>
                           <Input
-                            className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                            id={`frame-${index}-text-y-${textIndex}`}
-                            defaultValue={text.y}
-                            onChange={(e) =>
-                              handleChange(
-                                'texts',
-                                'y',
-                                e.target.value,
-                                index,
+                            name={`frames.${index}.texts.${textIndex}.y`}
+                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                              formik.touched?.frames?.[index]?.texts?.[
                                 textIndex
-                              )
+                              ]?.y &&
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.y
+                                ? 'border-rose-500'
+                                : ''
+                            }`}
+                            id={`frames.${index}.texts.${textIndex}.y`}
+                            defaultValue={text.y}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+
+                          <ErrorMessage
+                            show={
+                              formik.touched?.frames?.[index]?.texts?.[
+                                textIndex
+                              ]?.y &&
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.y
+                            }
+                            message={
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.y
                             }
                           />
                         </Field>
@@ -370,38 +448,61 @@ const Create = () => {
                         <Field>
                           <Label
                             className='block'
-                            htmlFor={`frame-${index}-text-size-${textIndex}`}
+                            htmlFor={`frames.${index}.texts.${textIndex}.size`}
                           >
                             Font size
                           </Label>
                           <Input
-                            className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                            id={`frame-${index}-text-size-${textIndex}`}
-                            defaultValue={text.size}
-                            onChange={(e) =>
-                              handleChange(
-                                'texts',
-                                'size',
-                                e.target.value,
-                                index,
+                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                              formik.touched?.frames?.[index]?.texts?.[
                                 textIndex
-                              )
+                              ]?.size &&
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.size
+                                ? 'border-rose-500'
+                                : ''
+                            }`}
+                            id={`frames.${index}.texts.${textIndex}.size`}
+                            name={`frames.${index}.texts.${textIndex}.size`}
+                            defaultValue={text.size}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+
+                          <ErrorMessage
+                            show={
+                              formik.touched?.frames?.[index]?.texts?.[
+                                textIndex
+                              ]?.size &&
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.size
+                            }
+                            message={
+                              formik.errors?.frames?.[index]?.texts?.[textIndex]
+                                ?.size
                             }
                           />
                         </Field>
 
                         <Color
-                          id={`frame-${index}-text-color-${textIndex}`}
+                          id={`frames.${index}.texts.${textIndex}.color`}
+                          name={`frames.${index}.texts.${textIndex}.color`}
                           label={'Font color'}
                           value={text.color}
-                          onChange={(e) =>
-                            handleChange(
-                              'texts',
-                              'color',
-                              e.target.value,
-                              index,
-                              textIndex
-                            )
+                          onBlur={formik.handleBlur}
+                          onChange={formik.handleChange}
+                        />
+
+                        <ErrorMessage
+                          show={
+                            formik.touched?.frames?.[index]?.texts?.[textIndex]
+                              ?.color &&
+                            formik.errors?.frames?.[index]?.texts?.[textIndex]
+                              ?.color
+                          }
+                          message={
+                            formik.errors?.frames?.[index]?.texts?.[textIndex]
+                              ?.color
                           }
                         />
                       </div>
@@ -411,11 +512,16 @@ const Create = () => {
                 <TabPanel className='rounded-xl bg-white/5 p-3'>
                   <Field className='flex flex-row justify-start items-center gap-2'>
                     <Switch
-                      id={`frame-includeImage-${index}`}
+                      id={`frames.${index}.includeImage`}
+                      name={`frames.${index}.includeImage`}
                       checked={frame.includeImage}
                       onChange={(checked) =>
-                        handleDirectChange('includeImage', checked, index)
+                        formik.setFieldValue(
+                          `frames.${index}.includeImage`,
+                          checked
+                        )
                       }
+                      onBlur={formik.handleBlur}
                       className='group relative flex h-7 w-14 cursor-pointer rounded-full bg-[#e5e5e5] p-1 transition-colors duration-200 ease-in-out focus:outline-none data-[focus]:outline-1 data-[focus]:outline-white data-[checked]:bg-[#6A64F1]'
                     >
                       <span
@@ -423,7 +529,7 @@ const Create = () => {
                         className='pointer-events-none inline-block size-5 translate-x-0 rounded-full bg-white ring-0 shadow-lg transition duration-200 ease-in-out group-data-[checked]:translate-x-7'
                       />
                     </Switch>
-                    <Label htmlFor={`frame-includeImage-${index}`}>
+                    <Label htmlFor={`frames.${index}.includeImage`}>
                       Include image
                     </Label>
                   </Field>
@@ -432,7 +538,7 @@ const Create = () => {
                     frame.images.map((image, imageIndex) => (
                       <Fieldset
                         className='space-y-4 mt-2 border-t-2 border-b-2 border-gray-300 py-4'
-                        key={`frame-${index}-image-${imageIndex}`}
+                        key={`frames-${index}-image-${imageIndex}`}
                       >
                         <Legend className='text-lg font-bold flex justify-between items-center'>
                           <span className='block'>{`Image ${
@@ -468,22 +574,41 @@ const Create = () => {
                         <Field>
                           <Label
                             className='block'
-                            htmlFor={`frame-${index}-image-url-${imageIndex}`}
+                            htmlFor={`frames.${index}.images.${imageIndex}.url`}
                           >
                             Url
                           </Label>
                           <Input
-                            className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                            id={`frame-${index}-image-url-${imageIndex}`}
-                            value={image.url}
-                            onChange={(e) =>
-                              handleChange(
-                                'images',
-                                'url',
-                                e.target.value,
-                                index,
+                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                              formik.touched?.frames?.[index]?.images?.[
                                 imageIndex
-                              )
+                              ]?.url &&
+                              formik.errors?.frames?.[index]?.images?.[
+                                imageIndex
+                              ]?.url
+                                ? 'border-rose-500'
+                                : ''
+                            }`}
+                            id={`frames.${index}.images.${imageIndex}.url`}
+                            name={`frames.${index}.images.${imageIndex}.url`}
+                            value={image.url}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+
+                          <ErrorMessage
+                            show={
+                              formik.touched?.frames?.[index]?.images?.[
+                                imageIndex
+                              ]?.url &&
+                              formik.errors?.frames?.[index]?.images?.[
+                                imageIndex
+                              ]?.url
+                            }
+                            message={
+                              formik.errors?.frames?.[index]?.images?.[
+                                imageIndex
+                              ]?.url
                             }
                           />
                         </Field>
@@ -491,22 +616,41 @@ const Create = () => {
                           <Field>
                             <Label
                               className='block'
-                              htmlFor={`frame-${index}-image-x-${imageIndex}`}
+                              htmlFor={`frames.${index}.images.${imageIndex}.x`}
                             >
                               X-axis position
                             </Label>
                             <Input
-                              className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                              id={`frame-${index}-image-x-${imageIndex}`}
-                              defaultValue={image.x}
-                              onChange={(e) =>
-                                handleChange(
-                                  'images',
-                                  'x',
-                                  e.target.value,
-                                  index,
+                              className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                                formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
-                                )
+                                ]?.x &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.x
+                                  ? 'border-rose-500'
+                                  : ''
+                              }`}
+                              id={`frames.${index}.images.${imageIndex}.x`}
+                              name={`frames.${index}.images.${imageIndex}.x`}
+                              defaultValue={image.x}
+                              onBlur={formik.handleBlur}
+                              onChange={formik.handleChange}
+                            />
+
+                            <ErrorMessage
+                              show={
+                                formik.touched?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.x &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.x
+                              }
+                              message={
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.x
                               }
                             />
                           </Field>
@@ -514,22 +658,41 @@ const Create = () => {
                           <Field>
                             <Label
                               className='block'
-                              htmlFor={`frame-${index}-image-y-${imageIndex}`}
+                              htmlFor={`frames.${index}.images.${imageIndex}.y`}
                             >
                               Y-axis position
                             </Label>
                             <Input
-                              className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                              id={`frame-${index}-image-y-${imageIndex}`}
-                              defaultValue={image.y}
-                              onChange={(e) =>
-                                handleChange(
-                                  'images',
-                                  'y',
-                                  e.target.value,
-                                  index,
+                              className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                                formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
-                                )
+                                ]?.y &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.y
+                                  ? 'border-rose-500'
+                                  : ''
+                              }`}
+                              id={`frames.${index}.images.${imageIndex}.y`}
+                              name={`frames.${index}.images.${imageIndex}.y`}
+                              defaultValue={image.y}
+                              onBlur={formik.handleBlur}
+                              onChange={formik.handleChange}
+                            />
+
+                            <ErrorMessage
+                              show={
+                                formik.touched?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.y &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.y
+                              }
+                              message={
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.y
                               }
                             />
                           </Field>
@@ -537,22 +700,41 @@ const Create = () => {
                           <Field>
                             <Label
                               className='block'
-                              htmlFor={`frame-${index}-image-width-${imageIndex}`}
+                              htmlFor={`frames.${index}.images.${imageIndex}.width`}
                             >
                               Width
                             </Label>
                             <Input
-                              className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                              id={`frame-${index}-image-width-${imageIndex}`}
-                              defaultValue={image.width}
-                              onChange={(e) =>
-                                handleChange(
-                                  'images',
-                                  'width',
-                                  e.target.value,
-                                  index,
+                              className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                                formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
-                                )
+                                ]?.width &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.width
+                                  ? 'border-rose-500'
+                                  : ''
+                              }`}
+                              id={`frames.${index}.images.${imageIndex}.width`}
+                              name={`frames.${index}.images.${imageIndex}.width`}
+                              defaultValue={image.width}
+                              onBlur={formik.handleBlur}
+                              onChange={formik.handleChange}
+                            />
+
+                            <ErrorMessage
+                              show={
+                                formik.touched?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.width &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.width
+                              }
+                              message={
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.width
                               }
                             />
                           </Field>
@@ -560,22 +742,41 @@ const Create = () => {
                           <Field>
                             <Label
                               className='block'
-                              htmlFor={`frame-${index}-image-height-${imageIndex}`}
+                              htmlFor={`frames.${index}.images.${imageIndex}.height`}
                             >
                               Height
                             </Label>
                             <Input
-                              className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                              id={`frame-${index}-image-height-${imageIndex}`}
-                              defaultValue={image.height}
-                              onChange={(e) =>
-                                handleChange(
-                                  'images',
-                                  'height',
-                                  e.target.value,
-                                  index,
+                              className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+                                formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
-                                )
+                                ]?.height &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.height
+                                  ? 'border-rose-500'
+                                  : ''
+                              }`}
+                              id={`frames.${index}.images.${imageIndex}.height`}
+                              name={`frames.${index}.images.${imageIndex}.height`}
+                              defaultValue={image.height}
+                              onBlur={formik.handleBlur}
+                              onChange={formik.handleChange}
+                            />
+
+                            <ErrorMessage
+                              show={
+                                formik.touched?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.height &&
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.height
+                              }
+                              message={
+                                formik.errors?.frames?.[index]?.images?.[
+                                  imageIndex
+                                ]?.height
                               }
                             />
                           </Field>
@@ -588,28 +789,29 @@ const Create = () => {
                     <Field>
                       <Label
                         className='block mb-1'
-                        htmlFor={`frame-${index}-backgroundType`}
+                        htmlFor={`frames.${index}.backgroundType`}
                       >
                         Background type
                       </Label>
                       <Select
-                        id={`frame-${index}-backgroundType`}
+                        id={`frames.${index}.backgroundType`}
+                        name={`frames.${index}.backgroundType`}
                         value={frame.backgroundType}
-                        onChange={(e) => {
-                          handleDirectChange(
-                            'backgroundType',
-                            e.target.value,
-                            index
-                          );
-
-                          if (e.target.value == 'color') {
-                            handleDirectChange('background', '#000000', index);
-                          } else {
-                            handleDirectChange('background', '', index);
-                          }
-                        }}
-                        className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 pl-2 text-base font-medium text-[#6B7280] outline-none border-r-8 border-transparent outline outline-[#e0e0e0]/50'
+                        onBlur={formik.handleBlur}
+                        onChange={formik.handleChange}
+                        className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 pl-2 text-base font-medium text-[#6B7280] outline-none border-r-8 border-transparent outline outline-[#e0e0e0]/50 ${
+                          formik.touched?.frames?.[index]?.backgroundType &&
+                          formik.errors?.frames?.[index]?.backgroundType
+                            ? 'border-rose-500'
+                            : ''
+                        }`}
                       >
+                        <option
+                          value={undefined}
+                          className='first-letter:uppercase'
+                        >
+                          Select type
+                        </option>
                         {BACKGROUND_TYPES.map((type, typeIndex) => (
                           <option
                             value={type}
@@ -620,56 +822,98 @@ const Create = () => {
                           </option>
                         ))}
                       </Select>
-                    </Field>
-                    {frame.backgroundType === 'color' ? (
-                      <Color
-                        id={`frame-${index}-background`}
-                        label={'Background color'}
-                        value={frame.background}
-                        onChange={(e) =>
-                          handleDirectChange(
-                            'background',
-                            e.target.value,
-                            index
-                          )
+
+                      <ErrorMessage
+                        show={
+                          formik.touched?.frames?.[index]?.backgroundType &&
+                          formik.touched?.frames?.[index]?.backgroundType
+                        }
+                        message={
+                          formik.touched?.frames?.[index]?.backgroundType
                         }
                       />
-                    ) : (
-                      <Field>
-                        <Label
-                          className='block'
-                          htmlFor={`frame-${index}-background`}
-                        >
-                          Background image url
-                        </Label>
-                        <Input
-                          className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                          id={`frame-${index}-background`}
+                    </Field>
+                    {frame.backgroundType != undefined &&
+                    frame.backgroundType === 'color' ? (
+                      <>
+                        <Color
+                          id={`frames.${index}.background`}
+                          name={`frames.${index}.background`}
+                          label={'Background color'}
                           value={frame.background}
-                          onChange={(e) =>
-                            handleDirectChange(
-                              'background',
-                              e.target.value,
-                              index
-                            )
-                          }
+                          onChange={formik.handleChange}
                         />
-                      </Field>
+
+                        <ErrorMessage
+                          show={
+                            formik.touched?.frames?.[index]?.background &&
+                            formik.touched?.frames?.[index]?.background
+                          }
+                          message={formik.touched?.frames?.[index]?.background}
+                        />
+                      </>
+                    ) : (
+                      frame.backgroundType != undefined && (
+                        <Field>
+                          <Label
+                            className='block'
+                            htmlFor={`frames.${index}.background`}
+                          >
+                            Background image url
+                          </Label>
+                          <Input
+                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md${
+                              formik.touched?.frames?.[index]?.background &&
+                              formik.errors?.frames?.[index]?.background
+                                ? 'border-rose-500'
+                                : ''
+                            }`}
+                            id={`frames.${index}.background`}
+                            name={`frames.${index}.background`}
+                            value={frame.background}
+                            onBlur={formik.handleBlur}
+                            onChange={formik.handleChange}
+                          />
+
+                          <ErrorMessage
+                            show={
+                              formik.touched?.frames?.[index]?.background &&
+                              formik.touched?.frames?.[index]?.background
+                            }
+                            message={
+                              formik.touched?.frames?.[index]?.background
+                            }
+                          />
+                        </Field>
+                      )
                     )}
                     <Field>
                       <Label
                         className='block'
-                        htmlFor={`frame-${index}-audioUrl`}
+                        htmlFor={`frames.${index}.audioUrl`}
                       >
                         Audio url [optional]
                       </Label>
                       <Input
-                        className='w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
-                        id={`frame-${index}-audioUrl`}
+                        className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md${
+                          formik.touched?.frames?.[index]?.audioUrl &&
+                          formik.errors?.frames?.[index]?.audioUrl
+                            ? 'border-rose-500'
+                            : ''
+                        }`}
+                        id={`frames.${index}.audioUrl`}
+                        name={`frames.${index}.audioUrl`}
                         value={frame.audioUrl}
-                        onChange={(e) =>
-                          handleDirectChange('audioUrl', e.target.value, index)
+                        onBlur={formik.handleBlur}
+                        onChange={formik.handleChange}
+                      />
+
+                      <ErrorMessage
+                        show={
+                          formik.touched?.frames?.[index]?.audioUrl &&
+                          formik.touched?.frames?.[index]?.audioUrl
                         }
+                        message={formik.touched?.frames?.[index]?.audioUrl}
                       />
                     </Field>
                   </div>
