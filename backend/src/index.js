@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const express = require('express');
 
+const cors = require('cors');
+
 const bodyParser = require('body-parser');
 
 const { registerFont } = require('canvas');
@@ -13,6 +15,8 @@ const { makeDirs } = require('./helpers');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+
+app.use(cors());
 
 app.use(bodyParser.json());
 

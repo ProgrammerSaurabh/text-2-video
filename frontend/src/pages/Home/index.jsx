@@ -5,6 +5,7 @@ import { FaLocationArrow } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 import HeroImage from '../../assets/hero.svg';
+import Cta from '../../components/Cta';
 
 const Home = () => {
   return (
@@ -25,12 +26,7 @@ const Home = () => {
           </span>
           .
         </p>
-        <Link to={'/video/create'}>
-          <Button className='flex gap-3 items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 border-b-violet-700 border-b-4 text-white font-bold rounded-lg transition-transform transform-gpu hover:-translate-y-1 hover:shadow-lg ml-3'>
-            <span>Try now</span>
-            <FaLocationArrow />
-          </Button>
-        </Link>
+        <Cta />
       </div>
       <div className='flex flex-col justify-center items-start md:h-full'>
         <img

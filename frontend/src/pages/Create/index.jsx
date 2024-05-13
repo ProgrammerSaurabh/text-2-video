@@ -25,6 +25,10 @@ import { FaPlus } from 'react-icons/fa';
 import Color from '../../components/Forms/Color';
 import ErrorMessage from '../../components/Forms/Color/ErrorMessage';
 
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+
 const TEXT_TEMPLATE = {
   content: '',
   x: 0,
@@ -150,11 +154,10 @@ const Create = () => {
       frames: [FRAME_TEMPLATE],
     },
     validationSchema: frameSchema,
-    onSubmit: (data) => {
-      console.log({ data });
-      window.aa = data;
-    },
+    onSubmit: (data) => submitData(data),
   });
+
+  const navigate = useNavigate();
 
   const addFrame = () => {
     formik.setFieldValue(`frames`, [
@@ -197,7 +200,30 @@ const Create = () => {
     }
   };
 
-  window.aa = formik;
+  const submitData = async (formData) => {
+    let response = null;
+
+    try {
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/generateFrame`,
+        formData?.frames ?? []
+      );
+
+      response = data;
+
+      if (response?.success) {
+        toast.success(response?.message);
+      }
+    } catch (error) {
+      if (response?.message) {
+        toast.error(response?.message);
+      }
+    } finally {
+      if (response?.id) {
+        navigate(`/videos/${response?.id}/status`);
+      }
+    }
+  };
 
   return (
     <div className=' container mx-auto h-full py-10 px-4'>

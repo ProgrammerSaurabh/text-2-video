@@ -10,6 +10,7 @@ const { default: getAudioDurationInSeconds } = require('get-audio-duration');
 
 const VideoModel = require('../db/models/video');
 const JobModel = require('../db/models/job');
+const archiver = require('archiver');
 
 const STATUSES = {
   PROGRESS: 0,
@@ -294,6 +295,20 @@ const processVideo = async (videoId, jobModel = null) => {
   }
 };
 
+const makeZip = (res, videoId) => {
+  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  res.attachment(`${videoId}.zip`);
+
+  res.setHeader('Content-Type', 'application/zip');
+
+  archive.pipe(res);
+
+  archive.directory(`${processedDir}/${videoId}`, `${videoId}`);
+
+  archive.finalize();
+};
+
 module.exports = {
   STATUSES,
   framesDir,
@@ -309,4 +324,5 @@ module.exports = {
   mergeAudioVideo,
   mergeVideos,
   processVideo,
+  makeZip,
 };
