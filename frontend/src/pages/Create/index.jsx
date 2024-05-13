@@ -47,9 +47,9 @@ const FRAME_TEMPLATE = {
   includeImage: false,
   texts: [TEXT_TEMPLATE],
   images: [IMAGE_TEMPLATE],
-  backgroundType: undefined,
-  background: undefined,
-  audioUrl: undefined,
+  backgroundType: BACKGROUND_TYPES[0],
+  background: '#000000',
+  audioUrl: '',
 };
 
 const frameSchema = yup.object().shape({
@@ -57,104 +57,61 @@ const frameSchema = yup.object().shape({
     .array()
     .of(
       yup.object().shape({
-        includeImage: yup.bool().optional(),
+        includeImage: yup.boolean().optional(),
         texts: yup
           .array()
           .of(
             yup.object().shape({
               content: yup.string().required('Content is required'),
               x: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
-                )
+                .number('Value should be number')
                 .required('X-axis position is required'),
               y: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
-                )
+                .number('Value should be number')
                 .required('Y-axis position is required'),
               size: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
-                )
+                .number('Value should be number')
                 .required('Size is required'),
               color: yup
                 .string()
                 .required('Color is required')
-                .test('hex-code-validator', 'Invalid hex code', (value) =>
-                  /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
+                .test(
+                  'hex-code-validator',
+                  'Invalid hex code for text color',
+                  (value) => /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
                 ),
             })
           )
           .required(),
         images: yup
           .array()
-          .of(
-            yup.object().shape({
-              url: yup.string().when('includeImage', {
-                is: true,
-                then: yup.string().required('Url is required'),
-              }),
-              // .test('img-url-validator', 'Invalid url', (value) =>
-              //   /(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z]{2,}(\.[a-zA-Z]{2,})(\.[a-zA-Z]{2,})?\/[a-zA-Z0-9]{2,}|((https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z]{2,}(\.[a-zA-Z]{2,})(\.[a-zA-Z]{2,})?)|(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}\.[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})?/g.test(
-              //     value
-              //   )
-              // )
-              x: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
+          .when('includeImage', {
+            is: true,
+            then: () =>
+              yup
+                .array()
+                .of(
+                  yup.object().shape({
+                    url: yup
+                      .string()
+                      .url('Invalid image url')
+                      .required('Url is required'),
+                    x: yup
+                      .number('Value should be number')
+                      .required('X-axis position is required'),
+                    y: yup
+                      .number('Value should be number')
+                      .required('Y-axis position is required'),
+                    width: yup
+                      .number('Value should be number')
+                      .required('Width is required'),
+                    height: yup
+                      .number('Value should be number')
+                      .required('Height is required'),
+                  })
                 )
-                .when('includeImage', {
-                  is: true,
-                  then: yup.number().required('X-axis position is required'),
-                }),
-              y: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
-                )
-                .when('includeImage', {
-                  is: true,
-                  then: yup.number().required('Y-axis position is required'),
-                }),
-              width: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
-                )
-                .when('includeImage', {
-                  is: true,
-                  then: yup.number().required('Width is required'),
-                }),
-              height: yup
-                .number()
-                .test(
-                  'positive-test',
-                  'Value should be positive',
-                  (value) => value >= 0
-                )
-                .when('includeImage', {
-                  is: true,
-                  then: yup.number().required('Height is required'),
-                }),
-            })
-          )
+                .required(),
+          })
           .required(),
         backgroundType: yup
           .string()
@@ -165,21 +122,23 @@ const frameSchema = yup.object().shape({
           .required('Value is required')
           .when('backgroundType', {
             is: BACKGROUND_TYPES[0],
-            then: yup
-              .string()
-              .test('hex-code-validator', 'Invalid hex code', (value) =>
-                /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
-              ),
+            then: () =>
+              yup
+                .string()
+                .test('hex-code-validator', 'Invalid hex code', (value) =>
+                  /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
+                )
+                .required('Background color is required'),
           })
           .when('backgroundType', {
             is: BACKGROUND_TYPES[1],
-            then: yup
-              .string()
-              .test('url-validation', 'Invalid hex code', (value) =>
-                /^#[0-9A-F]{3}$|^#[0-9A-F]{6}$/i.test(value)
-              ),
+            then: () =>
+              yup
+                .string()
+                .url('Invalid background image url')
+                .required('Background image is required'),
           }),
-        audioUrl: yup.string().optional(),
+        audioUrl: yup.string().url('Invalid audio url').optional(),
       })
     )
     .required(),
@@ -375,6 +334,7 @@ const Create = () => {
                             X-axis position
                           </Label>
                           <Input
+                            type='number'
                             name={`frames.${index}.texts.${textIndex}.x`}
                             className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                               formik.touched?.frames?.[index]?.texts?.[
@@ -386,7 +346,7 @@ const Create = () => {
                                 : ''
                             }`}
                             id={`frames.${index}.texts.${textIndex}.x`}
-                            defaultValue={text.x}
+                            value={text.x}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                           />
@@ -414,6 +374,7 @@ const Create = () => {
                             Y-axis position
                           </Label>
                           <Input
+                            type='number'
                             name={`frames.${index}.texts.${textIndex}.y`}
                             className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                               formik.touched?.frames?.[index]?.texts?.[
@@ -425,7 +386,7 @@ const Create = () => {
                                 : ''
                             }`}
                             id={`frames.${index}.texts.${textIndex}.y`}
-                            defaultValue={text.y}
+                            value={text.y}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                           />
@@ -453,6 +414,7 @@ const Create = () => {
                             Font size
                           </Label>
                           <Input
+                            type='number'
                             className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                               formik.touched?.frames?.[index]?.texts?.[
                                 textIndex
@@ -464,7 +426,7 @@ const Create = () => {
                             }`}
                             id={`frames.${index}.texts.${textIndex}.size`}
                             name={`frames.${index}.texts.${textIndex}.size`}
-                            defaultValue={text.size}
+                            value={text.size}
                             onBlur={formik.handleBlur}
                             onChange={formik.handleChange}
                           />
@@ -491,6 +453,12 @@ const Create = () => {
                           value={text.color}
                           onBlur={formik.handleBlur}
                           onChange={formik.handleChange}
+                          error={
+                            formik.touched?.frames?.[index]?.texts?.[textIndex]
+                              ?.color &&
+                            formik.errors?.frames?.[index]?.texts?.[textIndex]
+                              ?.color
+                          }
                         />
 
                         <ErrorMessage
@@ -579,6 +547,7 @@ const Create = () => {
                             Url
                           </Label>
                           <Input
+                            type='url'
                             className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                               formik.touched?.frames?.[index]?.images?.[
                                 imageIndex
@@ -621,6 +590,7 @@ const Create = () => {
                               X-axis position
                             </Label>
                             <Input
+                              type='number'
                               className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                                 formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
@@ -633,7 +603,7 @@ const Create = () => {
                               }`}
                               id={`frames.${index}.images.${imageIndex}.x`}
                               name={`frames.${index}.images.${imageIndex}.x`}
-                              defaultValue={image.x}
+                              value={image.x}
                               onBlur={formik.handleBlur}
                               onChange={formik.handleChange}
                             />
@@ -663,6 +633,7 @@ const Create = () => {
                               Y-axis position
                             </Label>
                             <Input
+                              type='number'
                               className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                                 formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
@@ -675,7 +646,7 @@ const Create = () => {
                               }`}
                               id={`frames.${index}.images.${imageIndex}.y`}
                               name={`frames.${index}.images.${imageIndex}.y`}
-                              defaultValue={image.y}
+                              value={image.y}
                               onBlur={formik.handleBlur}
                               onChange={formik.handleChange}
                             />
@@ -705,6 +676,7 @@ const Create = () => {
                               Width
                             </Label>
                             <Input
+                              type='number'
                               className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                                 formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
@@ -717,7 +689,7 @@ const Create = () => {
                               }`}
                               id={`frames.${index}.images.${imageIndex}.width`}
                               name={`frames.${index}.images.${imageIndex}.width`}
-                              defaultValue={image.width}
+                              value={image.width}
                               onBlur={formik.handleBlur}
                               onChange={formik.handleChange}
                             />
@@ -747,6 +719,7 @@ const Create = () => {
                               Height
                             </Label>
                             <Input
+                              type='number'
                               className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                                 formik.touched?.frames?.[index]?.images?.[
                                   imageIndex
@@ -759,7 +732,7 @@ const Create = () => {
                               }`}
                               id={`frames.${index}.images.${imageIndex}.height`}
                               name={`frames.${index}.images.${imageIndex}.height`}
-                              defaultValue={image.height}
+                              value={image.height}
                               onBlur={formik.handleBlur}
                               onChange={formik.handleChange}
                             />
@@ -798,7 +771,21 @@ const Create = () => {
                         name={`frames.${index}.backgroundType`}
                         value={frame.backgroundType}
                         onBlur={formik.handleBlur}
-                        onChange={formik.handleChange}
+                        onChange={(e) => {
+                          formik.handleChange(e);
+
+                          if (e.target.value === 'color') {
+                            formik.setFieldValue(
+                              `frames.${index}.background`,
+                              '#000000'
+                            );
+                          } else {
+                            formik.setFieldValue(
+                              `frames.${index}.background`,
+                              ''
+                            );
+                          }
+                        }}
                         className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 pl-2 text-base font-medium text-[#6B7280] outline-none border-r-8 border-transparent outline outline-[#e0e0e0]/50 ${
                           formik.touched?.frames?.[index]?.backgroundType &&
                           formik.errors?.frames?.[index]?.backgroundType
@@ -826,34 +813,35 @@ const Create = () => {
                       <ErrorMessage
                         show={
                           formik.touched?.frames?.[index]?.backgroundType &&
-                          formik.touched?.frames?.[index]?.backgroundType
+                          formik.errors?.frames?.[index]?.backgroundType
                         }
-                        message={
-                          formik.touched?.frames?.[index]?.backgroundType
-                        }
+                        message={formik.errors?.frames?.[index]?.backgroundType}
                       />
                     </Field>
-                    {frame.backgroundType != undefined &&
-                    frame.backgroundType === 'color' ? (
-                      <>
+                    {frame.backgroundType === 'color' ? (
+                      <div className='flex flex-col gap-1'>
                         <Color
                           id={`frames.${index}.background`}
                           name={`frames.${index}.background`}
                           label={'Background color'}
                           value={frame.background}
                           onChange={formik.handleChange}
+                          error={
+                            formik.touched?.frames?.[index]?.background &&
+                            formik.errors?.frames?.[index]?.background
+                          }
                         />
 
                         <ErrorMessage
                           show={
                             formik.touched?.frames?.[index]?.background &&
-                            formik.touched?.frames?.[index]?.background
+                            formik.errors?.frames?.[index]?.background
                           }
-                          message={formik.touched?.frames?.[index]?.background}
+                          message={formik.errors?.frames?.[index]?.background}
                         />
-                      </>
+                      </div>
                     ) : (
-                      frame.backgroundType != undefined && (
+                      frame.backgroundType && (
                         <Field>
                           <Label
                             className='block'
@@ -862,7 +850,8 @@ const Create = () => {
                             Background image url
                           </Label>
                           <Input
-                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md${
+                            type='url'
+                            className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                               formik.touched?.frames?.[index]?.background &&
                               formik.errors?.frames?.[index]?.background
                                 ? 'border-rose-500'
@@ -878,11 +867,9 @@ const Create = () => {
                           <ErrorMessage
                             show={
                               formik.touched?.frames?.[index]?.background &&
-                              formik.touched?.frames?.[index]?.background
+                              formik.errors?.frames?.[index]?.background
                             }
-                            message={
-                              formik.touched?.frames?.[index]?.background
-                            }
+                            message={formik.errors?.frames?.[index]?.background}
                           />
                         </Field>
                       )
@@ -895,7 +882,7 @@ const Create = () => {
                         Audio url [optional]
                       </Label>
                       <Input
-                        className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md${
+                        className={`w-full rounded-md border border-[#e0e0e0] bg-white py-3 px-4 text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
                           formik.touched?.frames?.[index]?.audioUrl &&
                           formik.errors?.frames?.[index]?.audioUrl
                             ? 'border-rose-500'
@@ -911,9 +898,9 @@ const Create = () => {
                       <ErrorMessage
                         show={
                           formik.touched?.frames?.[index]?.audioUrl &&
-                          formik.touched?.frames?.[index]?.audioUrl
+                          formik.errors?.frames?.[index]?.audioUrl
                         }
-                        message={formik.touched?.frames?.[index]?.audioUrl}
+                        message={formik.errors?.frames?.[index]?.audioUrl}
                       />
                     </Field>
                   </div>

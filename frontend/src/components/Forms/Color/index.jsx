@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Field, Input, Label } from '@headlessui/react';
 
-const Color = ({ id, label, value, onChange = () => null }) => {
+const Color = ({ id, label, value, error = false, onChange = () => null }) => {
   return (
     <>
       <Field>
@@ -18,7 +18,9 @@ const Color = ({ id, label, value, onChange = () => null }) => {
           </div>
           <Input
             type='color'
-            className='h-full rounded-md border rounded-tl-none rounded-bl-none border-[#e0e0e0] bg-[#e0e0e0] text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md'
+            className={`h-full rounded-md border rounded-tl-none rounded-bl-none border-[#e0e0e0] bg-[#e0e0e0] text-base font-medium text-[#6B7280] outline-none focus:border-[#6A64F1] focus:shadow-md ${
+              error ? 'border-rose-500' : ''
+            }`}
             id={id}
             defaultValue={value}
             onChange={onChange}
