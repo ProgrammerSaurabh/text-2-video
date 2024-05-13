@@ -2,17 +2,12 @@ const FrameModel = require('../db/models/frame');
 const VideoModel = require('../db/models/video');
 const JobModel = require('../db/models/job');
 
-const fs = require('fs');
-const archiver = require('archiver');
-const path = require('path');
-
 const {
   STATUSES,
   makeDirs,
   downloadAudio,
   saveSampleAudio,
   generateFrame,
-  processedDir,
   makeZip,
 } = require('../helpers');
 

@@ -119,8 +119,8 @@ const Status = () => {
             response?.status == 1
               ? 'text-green-600'
               : response?.status == 2
-              ? 'text-rose-560'
-              : 'text-blue-560'
+              ? 'text-rose-500'
+              : 'text-blue-500'
           }`}
         >
           {response?.message}
