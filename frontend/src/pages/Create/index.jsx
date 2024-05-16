@@ -247,7 +247,7 @@ const Create = () => {
         {formik.values['frames'].map((frame, index) => (
           <div
             key={`frame-${index}`}
-            className='w-full bg-white p-4 px-6 rounded-md shadow-lg'
+            className='w-full bg-white p-4 px-6 rounded-md shadow-lg z-10'
           >
             <div className='flex justify-between items-center gap-2'>
               <h2 className='text-2xl font-semibold mb-4 text-gray-800'>
