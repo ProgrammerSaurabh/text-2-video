@@ -23,7 +23,7 @@ import { FaTrashCan } from 'react-icons/fa6';
 
 import { FaPlus } from 'react-icons/fa';
 import Color from '../../components/Forms/Color';
-import ErrorMessage from '../../components/Forms/Color/ErrorMessage';
+import ErrorMessage from '../../components/Forms/ErrorMessage';
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
