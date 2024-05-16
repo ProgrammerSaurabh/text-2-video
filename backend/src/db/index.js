@@ -17,7 +17,11 @@ const connectDB = async () => {
     changeStream.on('change', (change) => {
       if (change.operationType === 'insert') {
         jobQueue.addJob(() =>
-          processVideo(change?.fullDocument?.videoId, change?.fullDocument)
+          setTimeout(
+            () =>
+              processVideo(change?.fullDocument?.videoId, change?.fullDocument),
+            2000
+          )
         );
       }
     });

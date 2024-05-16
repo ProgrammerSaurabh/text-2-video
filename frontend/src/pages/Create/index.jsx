@@ -225,6 +225,19 @@ const Create = () => {
     }
   };
 
+  const cpFromFrame = (e) => {
+    const from = e.target.value;
+    const to = e.target.selectedOptions[0]?.dataset?.to ?? null;
+
+    if (from == null || to == null) {
+      return;
+    }
+
+    formik.setFieldValue(`frames.${to}`, {
+      ...formik.values['frames'][from],
+    });
+  };
+
   return (
     <div className=' container mx-auto h-full py-10 px-4'>
       <form
@@ -241,7 +254,38 @@ const Create = () => {
                 #Frame {index + 1}
               </h2>
 
-              <div className='flex justify-center items-center gap-2'>
+              <div className='flex justify-center items-center gap-2 mb-2'>
+                {formik.values['frames'].length > 1 && (
+                  <Field>
+                    <Select
+                      className={`w-full rounded-md border border-[#e0e0e0] bg-white p-2 text-xs font-medium text-[#6B7280] outline-none border-r-8 border-transparent outline outline-[#e0e0e0]/50`}
+                      onChange={cpFromFrame}
+                    >
+                      <option
+                        value={null}
+                        data-from={null}
+                        className='first-letter:uppercase'
+                      >
+                        Copy frames
+                      </option>
+                      {formik.values['frames'].map((_, index__) => {
+                        if (index__ == index) {
+                          return null;
+                        }
+                        return (
+                          <option
+                            key={`frames-${index__}-copy-select`}
+                            value={index__}
+                            data-to={index}
+                            className='first-letter:uppercase'
+                          >
+                            Copy Frame #{index__ + 1}
+                          </option>
+                        );
+                      })}
+                    </Select>
+                  </Field>
+                )}
                 {index === 0 && (
                   <Button
                     onClick={() => addFrame()}
@@ -606,6 +650,18 @@ const Create = () => {
                               ]?.url
                             }
                           />
+
+                          {image.url && (
+                            <div className='flex'>
+                              <div className='w-[150px] p-2 pl-0'>
+                                <img
+                                  src={image.url}
+                                  alt={`Frame ${index} image ${imageIndex} url`}
+                                  className='shadow-md rounded max-w-full h-auto align-middle border-none'
+                                />
+                              </div>
+                            </div>
+                          )}
                         </Field>
                         <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
                           <Field>
@@ -897,6 +953,18 @@ const Create = () => {
                             }
                             message={formik.errors?.frames?.[index]?.background}
                           />
+
+                          {frame.background && (
+                            <div className='flex'>
+                              <div className='w-[150px] p-2 pl-0'>
+                                <img
+                                  src={frame.background}
+                                  alt={`Frame ${index} background`}
+                                  className='shadow-md rounded max-w-full h-auto align-middle border-none'
+                                />
+                              </div>
+                            </div>
+                          )}
                         </Field>
                       )
                     )}
@@ -928,6 +996,19 @@ const Create = () => {
                         }
                         message={formik.errors?.frames?.[index]?.audioUrl}
                       />
+
+                      {frame.audioUrl && (
+                        <audio
+                          controls
+                          className='my-2'
+                        >
+                          <source
+                            src={frame.audioUrl}
+                            type='audio/ogg'
+                          />
+                          Your browser does not support the audio element.
+                        </audio>
+                      )}
                     </Field>
                   </div>
                 </TabPanel>

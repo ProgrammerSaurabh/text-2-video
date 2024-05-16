@@ -9,6 +9,7 @@ const {
   saveSampleAudio,
   generateFrame,
   makeZip,
+  audioFileFormat,
 } = require('../helpers');
 
 exports.store = async (req, res) => {
@@ -52,7 +53,7 @@ exports.store = async (req, res) => {
         } = frame;
 
         try {
-          const audioFilePath = `./src/assets/audios/${savedVideo._id}/${index}.aac`;
+          const audioFilePath = `./src/assets/audios/${savedVideo._id}/${index}.${audioFileFormat}`;
 
           if (audioUrl) {
             await downloadAudio(audioUrl, audioFilePath);
@@ -160,7 +161,7 @@ exports.status = async (req, res) => {
       res.json({
         success: false,
         status: STATUSES.PROGRESS,
-        message: `Video #${video?._id} is in progress`,
+        message: `Video processing for #${video?._id} is in progress`,
       });
     }
 
@@ -168,7 +169,7 @@ exports.status = async (req, res) => {
       res.json({
         success: true,
         status: STATUSES.COMPLETED,
-        message: `Video #${video?._id} has been completed`,
+        message: `Video processing for #${video?._id} has been completed`,
       });
     }
 
@@ -176,7 +177,7 @@ exports.status = async (req, res) => {
       res.json({
         success: false,
         status: STATUSES.FAILED,
-        message: `Video #${video?._id} has been completed`,
+        message: `Video processing for #${video?._id} has been failed`,
       });
     }
 

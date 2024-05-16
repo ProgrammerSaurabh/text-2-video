@@ -12,6 +12,8 @@ const VideoModel = require('../db/models/video');
 const JobModel = require('../db/models/job');
 const archiver = require('archiver');
 
+const audioFileFormat = process.env.AUDIO_FILE_FORMAT || 'mp3';
+
 const STATUSES = {
   PROGRESS: 0,
   COMPLETED: 1,
@@ -23,7 +25,7 @@ const videosDir = './src/assets/videos';
 const audiosDir = './src/assets/audios';
 const processedDir = './src/assets/processed';
 const outputDir = './src/assets/outputs';
-const audioFile = './src/assets/audios/silence.aac';
+const audioFile = `./src/assets/audios/silence.${audioFileFormat}`;
 
 const makeDirs = async (videoId = null) => {
   return new Promise((resolve, reject) => {
@@ -106,16 +108,27 @@ const generateFrame = async (
 
     ctx.fillStyle = text.color;
 
-    drawMultilineText(ctx, text.content, text.x, text.y, canvas.width - 80, 40);
+    drawMultilineText(
+      ctx,
+      text.content,
+      text.x,
+      text.y,
+      canvas.width - 120,
+      40
+    );
   });
 
   if (includeImage && images?.length > 0) {
     images?.forEach(async (image) => {
-      const loadedImage = await loadImage(image.url);
+      try {
+        const loadedImage = await loadImage(image.url);
 
-      ctx.drawImage(loadedImage, image.x, image.y, image.width, image.height);
+        ctx.drawImage(loadedImage, image.x, image.y, image.width, image.height);
 
-      saveFrameImage(canvas, index, videoId);
+        saveFrameImage(canvas, index, videoId);
+      } catch (error) {
+        console.log(`Can\'t load image: ${image.url}`);
+      }
     });
   } else {
     saveFrameImage(canvas, index, videoId);
@@ -141,7 +154,6 @@ const drawMultilineText = (ctx, text, x, y, maxWidth, lineHeight) => {
       line = testLine;
     }
   }
-
   ctx.fillText(line, x, yOffset);
 };
 
@@ -159,7 +171,7 @@ const saveFrameImage = (canvas, index, videoId) => {
 const saveVideo = async (index, cb, videoId) => {
   return new Promise(async (resolve, reject) => {
     const durationInSeconds = await getAudioDurationInSeconds(
-      `${audiosDir}/${videoId}/${index}.aac`
+      `${audiosDir}/${videoId}/${index}.${audioFileFormat}`
     );
 
     const frameRate = 30;
@@ -184,7 +196,7 @@ const saveVideo = async (index, cb, videoId) => {
 
 const mergeAudioVideo = async (index, videoId) => {
   return new Promise((resolve, reject) => {
-    const ffmpegCommand = `ffmpeg -i ./src/assets/videos/${videoId}/${index}.mp4 -i ./src/assets/audios/${videoId}/${index}.aac -c:v copy -c:a copy -map 0:v -map 1:a -y -strict -1 ${processedDir}/${videoId}/${index}.mp4`;
+    const ffmpegCommand = `ffmpeg -i ./src/assets/videos/${videoId}/${index}.mp4 -i ./src/assets/audios/${videoId}/${index}.${audioFileFormat} -c:v copy -c:a copy -map 0:v -map 1:a -y -strict -1 ${processedDir}/${videoId}/${index}.mp4`;
 
     exec(ffmpegCommand, (error) => {
       if (error) {
@@ -316,6 +328,7 @@ module.exports = {
   audiosDir,
   processedDir,
   audioFile,
+  audioFileFormat,
   makeDirs,
   downloadAudio,
   saveSampleAudio,
